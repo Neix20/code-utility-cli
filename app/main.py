@@ -1,9 +1,12 @@
 import typer
 
-from utils.logger import logger
-from utils.file_handler import FileHandler
+from utils import (
+    FileHandler, logger
+)
 
-from processor.processor import Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor
+from processor import (
+    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor
+)
 
 app = typer.Typer()
 
@@ -23,18 +26,24 @@ def executor(processor: Processor, input: str = "", output: str = "", is_json: b
         
 @app.command()
 def join_lines(input: str = "", output: str = ""):
+    """Join all lines into a single line."""
     executor(JoinLinesProcessor, input=input, output=output)
+
 
 @app.command()
 def make_array(input: str = "", output: str = ""):
+    """Convert lines into a JSON array."""
     executor(MakeArrayProcessor, input=input, output=output, is_json=True)
+
 
 @app.command()
 def make_json(input: str = "", output: str = ""):
+    """Convert data into structured JSON."""
     executor(MakeJsonProcessor, input=input, output=output, is_json=True)
-    
+
 @app.command()
 def health():
+    """Check if the CLI is functioning properly."""
     logger.info("Status: Healthy")
 
 if __name__ == "__main__":
