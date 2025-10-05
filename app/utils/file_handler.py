@@ -15,7 +15,7 @@ class FileHandler():
             self.output = Path(output) if output else Path(fp)
             self.validate_file()
         except Exception as ex:
-            print(f"Exception: {ex}")
+            logger.error(f"Exception: {ex}")
 
         self._read_strategy: InFileStrategy | None = None
         self._write_strategy: OutFileStrategy | None = None
