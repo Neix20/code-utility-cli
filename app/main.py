@@ -8,7 +8,7 @@ from utils import (
 )
 
 from processor import (
-    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor
+    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor, GetKeysAndValuesProcessor
 )
 
 from strategy.base import InFileStrategy, OutFileStrategy
@@ -26,17 +26,26 @@ DEBUG = True
 log_file_handler = FileHandler()
 log_file_handler.set_write_strategy(TxWriteFileStrategy)
 
-def func_name_factory(processor: Processor) -> str:
+def func_factory(processor: Processor, data: None) -> str:
     """Generate a function name based on the processor class name."""
+
+    name = "unknown"
+    in_data = "Error"
     
     if isinstance(processor, JoinLinesProcessor):
-        return "join_lines"
+        name = "join_lines"
+        in_data = "\n".join(data)
     elif isinstance(processor, MakeArrayProcessor):
-        return "make_array"
+        name = "make_array"
+        in_data = "\n".join(data)
     elif isinstance(processor, MakeJsonProcessor):
-        return "make_json"
+        name = "make_json"
+        in_data = "\n".join(data)
+    elif isinstance(processor, GetKeysAndValuesProcessor):
+        name = "get_keys_and_values"
+        in_data = json.dumps(data, indent=4)
     
-    return "unknown"
+    return name, in_data
 
 def executor(file_handler: FileHandler, processor: Processor, debug: bool = False):
     """Generalized function to run a processor with given input and output paths."""
@@ -49,15 +58,17 @@ def executor(file_handler: FileHandler, processor: Processor, debug: bool = Fals
 
         # Write to Logs if Debug is Enabled
         if debug:
-            func_name = func_name_factory(proc)
+            # Fuck Our In Data Needs to Align With our Function
+            func_name, in_data = func_factory(proc, data)
             file_name = datetime.now().strftime("%Y%m%d_%H%M%S") + ".log"
 
             # Create Folder if it does not exists
             os.makedirs(os.path.join("logs", func_name), exist_ok=True)
 
+            # Set Output Data
             log_file_handler.output = os.path.join("logs", func_name, file_name)
 
-            in_data = "\n".join(data) if isinstance(data, list) else json.loads(data)
+            # Write Input File
             log_file_handler.write(in_data)
     
         # Write Output to File
@@ -92,6 +103,13 @@ def make_json(input: str = "", output: str = ""):
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, JsonWriteFileStrategy)
     executor(file_handler, MakeJsonProcessor, debug=DEBUG)
+
+@app.command()
+def get_keys_and_values(input: str = "", output: str = ""):
+    """Convert JSON data into key-value pairs"""
+    # Set File Handler
+    file_handler = make_file_handler(input, output, JsonReadFileStrategy, TxWriteFileStrategy)
+    executor(file_handler, GetKeysAndValuesProcessor, debug=DEBUG)
 
 @app.command()
 def health():
