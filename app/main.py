@@ -8,38 +8,54 @@ from processor import (
     Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor
 )
 
+from strategy.base import InFileStrategy, OutFileStrategy
+
+from strategy import (
+    JsonReadFileStrategy, JsonWriteFileStrategy,
+    TxReadFileStrategy, TxWriteFileStrategy
+)
+
 app = typer.Typer()
 
-def executor(processor: Processor, input: str = "", output: str = "", is_json: bool = False):
-    """
-    Generalized function to run a processor with given input and output paths.
-    """
-    config = FileHandler(input=input, output=output)
-    data = config.read()
+#region Utility Functions
+def executor(file_handler: FileHandler, processor: Processor):
+    """Generalized function to run a processor with given input and output paths."""
+    data = file_handler.read()
 
     # Dependecy Injection of Processor Function
     proc = processor()
-    processed_data = proc.process(data)
+    data = proc.process(data)
 
     # Write Output to File
-    config.write(processed_data, is_json=is_json)
+    file_handler.write(data)
+
+def make_file_handler(input: str, output: str, read_strategy: InFileStrategy, write_strategy: OutFileStrategy) -> FileHandler:
+    """Helper function to create and configure a FileHandler."""
+    file_handler = FileHandler(input=input, output=output)
+    file_handler.set_read_strategy(read_strategy)
+    file_handler.set_write_strategy(write_strategy)
+    return file_handler
+#endregion
         
 @app.command()
 def join_lines(input: str = "", output: str = ""):
     """Join all lines into a single line."""
-    executor(JoinLinesProcessor, input=input, output=output)
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
+    executor(file_handler, JoinLinesProcessor)
 
 
 @app.command()
 def make_array(input: str = "", output: str = ""):
     """Convert lines into a JSON array."""
-    executor(MakeArrayProcessor, input=input, output=output, is_json=True)
-
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, JsonWriteFileStrategy)
+    executor(file_handler, MakeArrayProcessor)
 
 @app.command()
 def make_json(input: str = "", output: str = ""):
     """Convert data into structured JSON."""
-    executor(MakeJsonProcessor, input=input, output=output, is_json=True)
+    # Set File Handler
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, JsonWriteFileStrategy)
+    executor(file_handler, MakeJsonProcessor)
 
 @app.command()
 def health():

@@ -4,48 +4,47 @@ from pathlib import Path
 
 from .logger import logger
 
+from strategy.base import InFileStrategy, OutFileStrategy
+
 class FileHandler():
     def __init__(self, input: str = "", output: str = ""):
         fp = os.path.join("datakit.txt")
-        self.input = Path(input) if input else Path(fp)
-        self.output = Path(output) if output else self.input
-        self.validate_params()
+        
+        try:
+            self.input = Path(input) if input else Path(fp)
+            self.output = Path(output) if output else Path(fp)
+            self.validate_file()
+        except Exception as ex:
+            print(f"Exception: {ex}")
 
-    def validate_params(self):
-        """Default validation: input must exist and be a file. Subclasses can override."""
+        self._read_strategy: InFileStrategy | None = None
+        self._write_strategy: OutFileStrategy | None = None
+
+    def validate_file(self):
         if not self.input.exists():
             raise FileNotFoundError(f"Input file does not exist: {self.input}")
         if not self.input.is_file():
             raise ValueError(f"Input path is not a file: {self.input}")
-        
-    def read(self, is_json: bool = False) -> list[str]:
+        return True
+    
+    def set_read_strategy(self, strategy: InFileStrategy):
+        self._read_strategy = strategy()
+
+    def set_write_strategy(self, strategy: OutFileStrategy):
+        self._write_strategy = strategy()
+
+    def read(self) -> list[str]:
         """Read and strip lines, returns list of lines."""
         try:
-            with open(self.input, "r", encoding="utf-8") as file:
-                
-                if not is_json:
-                    data = file.readlines()
-                    for ind in range(len(data)):
-                        data[ind] = data[ind].strip()
-                else:
-                    data = json.load(file)
-
-            file.close()
-
+            data = self._read_strategy.read(self.input)
             logger.info(f"Successfully read Data from {self.input}!")
             return data
         except Exception as ex:
             logger.error(f"Error! Unable to read Data from {self.input}! Exception: {ex}")
         
-    def write(self, data: str, is_json: bool = False) -> None:
+    def write(self, data: None) -> None:
         try:
-            with open(self.output, "w", encoding="utf-8") as file:
-                if not is_json:
-                    file.write(data)
-                else:
-                    json.dump(data, file, indent=4)
-            file.close()
-
+            self._write_strategy.write(self.output, data)
             logger.info(f"Successfully write Data to {self.output}!")
         except Exception as ex:
             logger.error(f"Error! Unable to write Data to {self.output}! Exception: {ex}")
