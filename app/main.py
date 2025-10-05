@@ -8,7 +8,8 @@ from utils import (
 )
 
 from processor import (
-    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor, GetKeysAndValuesProcessor
+    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor, GetKeysAndValuesProcessor,
+    EpochIsoConverterProcessor
 )
 
 from strategy.base import InFileStrategy, OutFileStrategy
@@ -44,6 +45,9 @@ def func_factory(processor: Processor, data: None) -> str:
     elif isinstance(processor, GetKeysAndValuesProcessor):
         name = "get_keys_and_values"
         in_data = json.dumps(data, indent=4)
+    elif isinstance(processor, EpochIsoConverterProcessor):
+        name = "epoch_iso_converter"
+        in_data = "\n".join(data)
     
     return name, in_data
 
@@ -110,6 +114,13 @@ def get_keys_and_values(input: str = "", output: str = ""):
     # Set File Handler
     file_handler = make_file_handler(input, output, JsonReadFileStrategy, TxWriteFileStrategy)
     executor(file_handler, GetKeysAndValuesProcessor, debug=DEBUG)
+
+@app.command()
+def epoch_iso_converter(input: str = "", output: str = ""):
+    """Convert JSON data into key-value pairs"""
+    # Set File Handler
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
+    executor(file_handler, EpochIsoConverterProcessor, debug=DEBUG)
 
 @app.command()
 def health():

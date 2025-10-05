@@ -4,11 +4,13 @@ from .join_lines import JoinLinesProcessor
 from .make_array import MakeArrayProcessor
 from .make_json import MakeJsonProcessor
 from .get_keys_and_values import GetKeysAndValuesProcessor
+from .epoch_iso_converter import EpochIsoConverterProcessor
 
 __all__ = [
     "Processor",
     "JoinLinesProcessor",
     "MakeArrayProcessor",
     "MakeJsonProcessor",
-    "GetKeysAndValuesProcessor"
+    "GetKeysAndValuesProcessor",
+    "EpochIsoConverterProcessor"
 ]
