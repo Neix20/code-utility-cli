@@ -7,6 +7,7 @@ from .get_keys_and_values import GetKeysAndValuesProcessor
 from .epoch_iso_converter import EpochIsoConverterProcessor
 from .yaml_converter import YamlConverterProcessor
 from .csv_converter import CsvConverterProcessor
+from .sql_converter import SqlConverterProcessor
 
 __all__ = [
     "Processor",
@@ -16,5 +17,6 @@ __all__ = [
     "GetKeysAndValuesProcessor",
     "EpochIsoConverterProcessor",
     "YamlConverterProcessor",
-    "CsvConverterProcessor"
+    "CsvConverterProcessor",
+    "SqlConverterProcessor"
 ]

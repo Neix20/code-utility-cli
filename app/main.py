@@ -13,7 +13,8 @@ from processor import (
     GetKeysAndValuesProcessor,
     EpochIsoConverterProcessor,
     YamlConverterProcessor,
-    CsvConverterProcessor
+    CsvConverterProcessor,
+    SqlConverterProcessor
 )
 
 from strategy.base import InFileStrategy, OutFileStrategy
@@ -60,6 +61,9 @@ def func_factory(processor: Processor, data: None) -> str:
     elif isinstance(processor, CsvConverterProcessor):
         name = "csv_converter"
         in_data = "\n".join(data)
+    elif isinstance(processor, SqlConverterProcessor):
+        name = "csv_converter"
+        in_data = "\n".join(data)
     
     return name, in_data
 
@@ -69,13 +73,12 @@ def executor(file_handler: FileHandler, processor: Processor, debug: bool = Fals
         data = file_handler.read()
 
         # Dependecy Injection of Processor Function
-        proc = processor()
-        proc_data = proc.process(data)
+        proc = processor.process(data)
 
         # Write to Logs if Debug is Enabled
         if debug:
             # Fuck Our In Data Needs to Align With our Function
-            func_name, in_data = func_factory(proc, data)
+            func_name, in_data = func_factory(processor, data)
             file_name = datetime.now().strftime("%Y%m%d_%H%M%S") + ".log"
 
             # Create Folder if it does not exists
@@ -88,7 +91,7 @@ def executor(file_handler: FileHandler, processor: Processor, debug: bool = Fals
             log_file_handler.write(in_data)
     
         # Write Output to File
-        file_handler.write(proc_data)
+        file_handler.write(proc)
     except Exception as ex:
         logger.error(f"Exception: {ex}")
 
@@ -103,50 +106,92 @@ def make_file_handler(input: str, output: str, read_strategy: InFileStrategy, wr
 @app.command()
 def join_lines(input: str = "", output: str = ""):
     """Join all lines into a single line."""
+    # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
-    executor(file_handler, JoinLinesProcessor, debug=DEBUG)
+
+    # Initialize Processor
+    processor = JoinLinesProcessor()
+
+    executor(file_handler, processor, debug=DEBUG)
 
 
 @app.command()
 def make_array(input: str = "", output: str = ""):
     """Convert lines into a JSON array."""
+
+    # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, JsonWriteFileStrategy)
-    executor(file_handler, MakeArrayProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = MakeArrayProcessor()
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
 def make_json(input: str = "", output: str = ""):
     """Convert data into structured JSON."""
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, JsonWriteFileStrategy)
-    executor(file_handler, MakeJsonProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = MakeJsonProcessor()
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
 def get_keys_and_values(input: str = "", output: str = ""):
     """Convert JSON data into key-value pairs"""
     # Set File Handler
     file_handler = make_file_handler(input, output, JsonReadFileStrategy, TxWriteFileStrategy)
-    executor(file_handler, GetKeysAndValuesProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = GetKeysAndValuesProcessor()
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
 def epoch_iso_converter(input: str = "", output: str = ""):
     """Convert JSON data into key-value pairs"""
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
-    executor(file_handler, EpochIsoConverterProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = EpochIsoConverterProcessor()
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
-def yaml_converter(input: str = "", output: str = ""):
+def yaml_converter(type: str, input: str = "", output: str = ""):
     """Convert JSON data into key-value pairs"""
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
-    executor(file_handler, YamlConverterProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = YamlConverterProcessor(type)
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
-def csv_converter(input: str = "", output: str = ""):
+def csv_converter(type: str, input: str = "", output: str = ""):
     """Convert JSON data into key-value pairs"""
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
-    executor(file_handler, CsvConverterProcessor, debug=DEBUG)
+    
+    # Initialize Processor
+    processor = CsvConverterProcessor(type)
+
+    executor(file_handler, processor, debug=DEBUG)
+
+@app.command()
+def sql_converter(type: str, tbl_name: str = "tbl_name", input: str = "", output: str = ""):
+    """Convert JSON data into key-value pairs"""
+    # Set File Handler
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
+    
+    # Initialize Processor
+    processor = SqlConverterProcessor(type, tbl_name)
+
+    executor(file_handler, processor, debug=DEBUG)
 
 @app.command()
 def health():

@@ -1,4 +1,13 @@
-{
-    "id": 70,
-    "email": "zufo@uzo.ao"
-}
+BEGIN TRANSACTION;
+UPDATE person
+SET
+    email = 'zufo@uzo.ao',
+    age = '41'
+WHERE 1=1
+AND id = 70;
+UPDATE person
+SET
+    email = 'vog@be.ve',
+    age = '43'
+WHERE 1=1
+AND id = 55;

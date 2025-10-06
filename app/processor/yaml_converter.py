@@ -7,6 +7,14 @@ import json
 from utils.helper import check_json
 
 class YamlConverterProcessor(Processor):
+
+    def __init__(self, type: str):
+        self.type = type.lower()
+        
+        selection = ["yaml-to-json", "json-to-yaml"]
+        if self.type not in selection:
+            raise ValueError(f"Type must be either '{"', ".join(selection[:-1])}' or '{selection[-1]}'")
+
     def process(self, data: str) -> List[str]:
         """Convert json string to yaml string"""
 
@@ -17,7 +25,7 @@ class YamlConverterProcessor(Processor):
         data = "\n".join(data)
 
         # Convert From JSON to YAML
-        if check_json(data):
+        if self.type == "json-to-yaml":
             json_data = json.loads(data)
             res = yaml.safe_dump(json_data, sort_keys=False, indent=2, allow_unicode=True)
         else:
