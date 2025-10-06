@@ -1,6 +1,8 @@
 
 import pytest
-from app.processor.processor import JoinLinesProcessor
+from app.processor import (
+    JoinLinesProcessor
+)
 
 
 @pytest.fixture
