@@ -46,7 +46,7 @@ class MakeJsonProcessor(Processor):
         # Add the Last Res List
         res_ls.append({**res})
 
-        if len(res_ls) > 0:
+        if len(res_ls) > 1:
             return res_ls
 
         return res_ls[0]

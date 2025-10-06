@@ -7,6 +7,6 @@ class TxReadFileStrategy(InFileStrategy):
         with open(file_path, "r", encoding="utf-8") as file:
             data = file.readlines()
             for ind in range(len(data)):
-                data[ind] = data[ind].strip()
+                data[ind] = data[ind].rstrip()
         file.close()
         return data

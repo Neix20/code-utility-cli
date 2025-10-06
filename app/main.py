@@ -3,20 +3,26 @@ import json
 from datetime import datetime
 import typer
 
-from utils import (
-    FileHandler, logger
-)
+from utils import FileHandler, logger
 
 from processor import (
-    Processor, JoinLinesProcessor, MakeArrayProcessor, MakeJsonProcessor, GetKeysAndValuesProcessor,
-    EpochIsoConverterProcessor
+    Processor,
+    JoinLinesProcessor,
+    MakeArrayProcessor,
+    MakeJsonProcessor,
+    GetKeysAndValuesProcessor,
+    EpochIsoConverterProcessor,
+    YamlConverterProcessor,
+    CsvConverterProcessor
 )
 
 from strategy.base import InFileStrategy, OutFileStrategy
 
 from strategy import (
-    JsonReadFileStrategy, JsonWriteFileStrategy,
-    TxReadFileStrategy, TxWriteFileStrategy
+    JsonReadFileStrategy, 
+    JsonWriteFileStrategy,
+    TxReadFileStrategy, 
+    TxWriteFileStrategy
 )
 
 app = typer.Typer()
@@ -44,9 +50,15 @@ def func_factory(processor: Processor, data: None) -> str:
         in_data = "\n".join(data)
     elif isinstance(processor, GetKeysAndValuesProcessor):
         name = "get_keys_and_values"
-        in_data = json.dumps(data, indent=4)
+        in_data = json.dumps(data, indent=2)
     elif isinstance(processor, EpochIsoConverterProcessor):
         name = "epoch_iso_converter"
+        in_data = "\n".join(data)
+    elif isinstance(processor, YamlConverterProcessor):
+        name = "yaml_converter"
+        in_data = "\n".join(data)
+    elif isinstance(processor, CsvConverterProcessor):
+        name = "csv_converter"
         in_data = "\n".join(data)
     
     return name, in_data
@@ -121,6 +133,20 @@ def epoch_iso_converter(input: str = "", output: str = ""):
     # Set File Handler
     file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
     executor(file_handler, EpochIsoConverterProcessor, debug=DEBUG)
+
+@app.command()
+def yaml_converter(input: str = "", output: str = ""):
+    """Convert JSON data into key-value pairs"""
+    # Set File Handler
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
+    executor(file_handler, YamlConverterProcessor, debug=DEBUG)
+
+@app.command()
+def csv_converter(input: str = "", output: str = ""):
+    """Convert JSON data into key-value pairs"""
+    # Set File Handler
+    file_handler = make_file_handler(input, output, TxReadFileStrategy, TxWriteFileStrategy)
+    executor(file_handler, CsvConverterProcessor, debug=DEBUG)
 
 @app.command()
 def health():

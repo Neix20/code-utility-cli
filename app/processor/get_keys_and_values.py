@@ -2,7 +2,7 @@ from .base import Processor
 from typing import List, Dict
 
 class GetKeysAndValuesProcessor(Processor):
-    def process(self, data: Dict[str, str]) -> str:
+    def process(self, data: Dict[str, str] | List[Dict[str, str]]) -> str:
         """Convert list of strings into a JSON array string."""
 
         output_ls = []
